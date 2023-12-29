@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using System.Threading.Tasks;
 
 namespace Chat.Shared
@@ -19,6 +20,7 @@ namespace Chat.Shared
         {
             memoryStream = new MemoryStream();
             WriteOpCode(code);
+            WriteMessageLength(1);
             WriteString(message);
             return GetPaketBytes();
         }
@@ -27,11 +29,18 @@ namespace Chat.Shared
         {
             memoryStream = new MemoryStream();
             WriteOpCode(code);
+            WriteMessageLength(message.Length);
             foreach (string s in message)
             {
                 WriteString(s);
             }
             return GetPaketBytes();
+        }
+
+        private void WriteMessageLength(int length)
+        {
+            byte lengthByte = Convert.ToByte(length);
+            memoryStream.WriteByte(lengthByte);
         }
 
         private void WriteOpCode(NetworkOperationCode opCode)

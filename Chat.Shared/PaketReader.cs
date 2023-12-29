@@ -24,6 +24,8 @@ namespace Chat.Shared
                 OperationCode = opCode,
                 Payload = payload
             };
+            var log = string.Join("}, {", message.Payload.ToArray());
+            Console.WriteLine($"Got message with OpCode {opCode}; Payload {{{log}}}");
             return message;
         }
 
@@ -35,8 +37,9 @@ namespace Chat.Shared
 
         private List<string> ReadPayload()
         {
-            List<string> result = new List<string>();
-            while (stream.DataAvailable) // https://youtu.be/I-Xmp-mulz4?t=2317
+            var payloadLength = stream.ReadByte();
+            var payload = new List<string>();
+            for (int i = 0;i < payloadLength; i++) // https://youtu.be/I-Xmp-mulz4?t=2317
             {
                 byte[] buffer;
                 // Read messageLength from message (NetworkStream)
@@ -47,10 +50,10 @@ namespace Chat.Shared
 
                 if (!string.IsNullOrEmpty(message))
                 {
-                    result.Add(message);
+                    payload.Add(message);
                 }
             }
-            return result;
+            return payload;
         }
     }
 }
