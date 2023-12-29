@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient" xmlns:viewmodel="clr-namespace:ChatClient.MVVM.ViewModel"
         mc:Ignorable="d"
-        Title="Chat Client" Height="450" Width="800">
+        Title="Chat Client" Height="475" Width="815">
 
     <Window.DataContext>
         <viewmodel:MainViewModel></viewmodel:MainViewModel>
