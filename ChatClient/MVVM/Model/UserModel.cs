@@ -10,5 +10,9 @@ namespace ChatClient.MVVM.Model
     {
         public string UserName { get; set; }
         public Guid Id { get; set; }
+        public override string ToString()
+        {
+            return $"[{UserName}@{Id}]";
+        }
     } 
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient" xmlns:viewmodel="clr-namespace:ChatClient.MVVM.ViewModel"
         mc:Ignorable="d"
-        Title="Chat Client" Height="475" Width="815">
+        Title="Chat Client" Height="474" Width="816">
 
     <Window.DataContext>
         <viewmodel:MainViewModel></viewmodel:MainViewModel>
@@ -41,13 +41,27 @@
         </DockPanel>
 
         <StackPanel Grid.Column="1">
-            <ListView Height="380">
-                
+            <ListView 
+                Height="380"
+                ItemsSource="{Binding Messages, UpdateSourceTrigger=PropertyChanged}"
+                >
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding ShowMessage}"></TextBlock>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
             </ListView>
             <StackPanel Orientation="Horizontal">
-                <TextBox Height="55" Width="545">                    
+                <TextBox 
+                    Height="55"
+                    Width="545"
+                    Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}">                    
                 </TextBox>
-                <Button Height="55" Content="Send" Width="55">
+                <Button 
+                    Height="55" 
+                    Content="Send" 
+                    Width="55"
+                    Command="{Binding SendMessageCommand}">
                 </Button>
             </StackPanel>
         </StackPanel>

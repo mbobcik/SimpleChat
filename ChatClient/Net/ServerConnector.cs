@@ -11,14 +11,16 @@ namespace ChatClient.Net
     internal class ServerConnector
     {
         TcpClient client;
-        PaketBuilder paketBuilder;
+        PaketBuilder packetBuilder;
 
         public event Action<PaketContainer>? ConnectedEvent;
+        public event Action<PaketContainer>? MessageReceivedEvent;
+        public event Action<PaketContainer>? DisconnectedUserEvent;
 
         public ServerConnector()
         {
             client = new TcpClient();
-            paketBuilder = new PaketBuilder();
+            packetBuilder = new PaketBuilder();
         }
 
         public void Connect(string username)
@@ -29,12 +31,19 @@ namespace ChatClient.Net
                 PaketReader paketReader = new PaketReader(client.GetStream());
                 if (!string.IsNullOrEmpty(username))
                 {
-                    var connectMessage = this.paketBuilder.BuildMessage(NetworkOperationCode.NewConnection, username);
+                    var connectMessage = this.packetBuilder.BuildMessage(NetworkOperationCode.NewConnection, username);
                     client.Client.Send(connectMessage);
                 }
 
                 ReadPackets(paketReader);
             }
+        }
+
+        public void SendMessageToServer(string message)
+        {
+            var sentAt = DateTime.Now.ToString();
+            var messagePacket = this.packetBuilder.BuildMessage(NetworkOperationCode.MessageToServer, message, sentAt);
+            this.client.Client.Send(messagePacket);
         }
 
         private void ReadPackets(PaketReader paketReader)
@@ -55,6 +64,12 @@ namespace ChatClient.Net
                             break;
                         case NetworkOperationCode.NewClientBroadcast:
                             ConnectedEvent?.Invoke(message);
+                            break;
+                        case NetworkOperationCode.MessageToServer:
+                            this.MessageReceivedEvent?.Invoke(message);
+                            break;
+                        case NetworkOperationCode.UserDisconnected:
+                            this.DisconnectedUserEvent?.Invoke(message);
                             break;
                         default:
                             log = string.Join("}, {", message.Payload.ToArray());

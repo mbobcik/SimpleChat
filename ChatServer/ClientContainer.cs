@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
@@ -34,6 +35,39 @@ namespace ChatServer
             // End on https://youtu.be/I-Xmp-mulz4?t=1566
 
             Console.WriteLine($"[{DateTime.Now}]: User {UserName} with ID {Id} has connected");
+
+            Task.Factory.StartNew(Process);
+        }
+
+        void Process()
+        {
+            while ( true )
+            {
+                try
+                {
+                    var message = this.paketReader.ReadMessage();
+                    switch ( message.OperationCode )
+                    {
+                        case NetworkOperationCode.MessageToServer:
+                            string content = message.Payload[0];
+                            string sentAt = message.Payload[1];
+                            DateTime sentAtDateTime = DateTime.Parse( sentAt );
+                            Console.WriteLine($"[{DateTime.Now}]: user [{UserName}:{Id}] sent message at {sentAtDateTime}: {content}");
+                            Program.Broadcast(NetworkOperationCode.MessageToServer, Id.ToString(), content, sentAt);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (Exception e) // TODO BetterException and error handling
+                {
+                    Console.WriteLine($"[{DateTime.Now}] user [{UserName}:{Id}] disconnected. Exception {e}");
+                    Socket.Close();
+                    Program.HandleDisconnectedUser(Id);
+                    break;
+                }
+
+            }
         }
     }
 }

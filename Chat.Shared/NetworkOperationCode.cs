@@ -10,6 +10,8 @@ namespace Chat.Shared
     {
         None = 0,
         NewConnection,
-        NewClientBroadcast
+        NewClientBroadcast,
+        MessageToServer,
+        UserDisconnected
     }
 }

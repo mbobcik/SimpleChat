@@ -1,6 +1,7 @@
 ﻿using Chat.Shared;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 namespace ChatServer
 {
@@ -36,6 +37,21 @@ namespace ChatServer
                     var broadcastPaket = paketBuilder.BuildMessage(NetworkOperationCode.NewClientBroadcast, clientMessage.UserName, clientMessage.Id.ToString());
                     clientDestination.Socket.Client.Send(broadcastPaket);
                 }
+            }
+        }
+        
+        internal static void HandleDisconnectedUser(Guid Id)
+        {
+            connectedClients.RemoveAll(client => client.Id == Id);
+            Broadcast(NetworkOperationCode.UserDisconnected, Id.ToString(), DateTime.Now.ToString());
+        }
+
+        internal static void Broadcast(NetworkOperationCode opCode, params string[] message)
+        {
+            foreach(var clientDestination in connectedClients)
+            {
+                var messagePacket = paketBuilder.BuildMessage(opCode, message);
+                clientDestination.Socket.Client.Send(messagePacket);
             }
         }
     }
