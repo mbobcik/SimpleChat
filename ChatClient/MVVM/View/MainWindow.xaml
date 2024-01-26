@@ -20,6 +20,18 @@
         </Grid.ColumnDefinitions>
         
         <DockPanel>
+            <Label 
+                Content="Address:Port"
+                DockPanel.Dock="Top"
+                   ></Label>
+            <TextBox Height="25"
+                       DockPanel.Dock="Top"
+                       Text="{Binding AddressWithPort, UpdateSourceTrigger=PropertyChanged}">
+            </TextBox>
+            <Label 
+                Content="Display name:"
+                DockPanel.Dock="Top"
+                   ></Label>
             <TextBox Height="25"
                        DockPanel.Dock="Top"
                        Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}">

@@ -23,11 +23,18 @@ namespace ChatClient.Net
             packetBuilder = new PaketBuilder();
         }
 
-        public void Connect(string username)
+        public async Task ConnectAsync(string username, string addressWithPort)
         {
             if (!client.Connected)
             {
-                client.Connect("127.0.0.1", 7981);
+                try
+                {
+                      await client.ConnectAsync(AddressHelper.ParseAddress(addressWithPort), AddressHelper.ParsePort(addressWithPort));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERROR: Failed to connect to client with following exception: {ex}");
+                }
                 PaketReader paketReader = new PaketReader(client.GetStream());
                 if (!string.IsNullOrEmpty(username))
                 {

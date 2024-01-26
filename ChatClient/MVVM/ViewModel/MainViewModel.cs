@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,6 +19,8 @@ namespace ChatClient.MVVM.ViewModel
         public RelayCommand SendMessageCommand { get; set; }
         
         public string UserName { get; set; }
+        public string AddressWithPort{ get; set; }
+
         public string Message { get; set; }
 
         public ObservableCollection<UserModel> ConnectedUsers{ get; set; }
@@ -32,8 +35,8 @@ namespace ChatClient.MVVM.ViewModel
             server.DisconnectedUserEvent += DisconnectedUser;
             server.MessageReceivedEvent += ReceivedMessage; 
 
-            ConnectToServerCommand = new RelayCommand (x =>  server.Connect(UserName), x => !string.IsNullOrEmpty(UserName));
-            SendMessageCommand = new RelayCommand(x => server.SendMessageToServer(Message), x => !string.IsNullOrEmpty(Message));
+            ConnectToServerCommand = new RelayCommand (x =>  server.ConnectAsync(UserName, AddressWithPort), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
+            SendMessageCommand = new RelayCommand(x => server.SendMessageToServer(Message), x => !string.IsNullOrWhiteSpace(Message));
 
             ConnectedUsers = new ObservableCollection<UserModel>();
             Messages = new ObservableCollection<MessageContainer>();
