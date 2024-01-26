@@ -47,7 +47,15 @@
                 >
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding ShowMessage}"></TextBlock>
+                        <TextBlock Text="{Binding ShowMessage}">
+                            <TextBlock.ToolTip>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Sender.Id, StringFormat=Sender ID: {0}}"></TextBlock>
+                                    <TextBlock Text="{Binding SentAt, StringFormat=Sent at: {0}}"></TextBlock>
+                                    <TextBlock Text="{Binding ReceivedAt, StringFormat=Received at: {0}}"></TextBlock>
+                                </StackPanel>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
