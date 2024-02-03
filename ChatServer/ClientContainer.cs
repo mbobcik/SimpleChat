@@ -41,8 +41,10 @@ namespace ChatServer
 
         void Process()
         {
-            while ( true )
+            bool active = true;
+            while ( active )
             {
+                
                 try
                 {
                     var message = this.paketReader.ReadMessage();
@@ -55,15 +57,21 @@ namespace ChatServer
                             Console.WriteLine($"[{DateTime.Now}]: user [{UserName}:{Id}] sent message at {sentAtDateTime}: {content}");
                             Program.Broadcast(NetworkOperationCode.MessageToServer, Id.ToString(), content, sentAt);
                             break;
+                        case NetworkOperationCode.UserDisconnected:
+                            active = false;
+                            Console.WriteLine($"[{DateTime.Now}] user [{this.UserName}:{this.Id}] disconnected.");
+                            Socket.Close();
+                            Program.HandleDisconnectedUser(this.Id);
+                            break;
                         default:
                             break;
                     }
                 }
                 catch (Exception e) // TODO BetterException and error handling
                 {
-                    Console.WriteLine($"[{DateTime.Now}] user [{UserName}:{Id}] disconnected. Exception {e}");
+                    Console.WriteLine($"[{DateTime.Now}] user [{this.UserName}:{this.Id}] disconnected with exception {e}");
                     Socket.Close();
-                    Program.HandleDisconnectedUser(Id);
+                    Program.HandleDisconnectedUser(this.Id);
                     break;
                 }
 

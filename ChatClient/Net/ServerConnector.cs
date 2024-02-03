@@ -1,21 +1,25 @@
 ﻿using Chat.Shared;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatClient.Net
 {
     internal class ServerConnector
     {
-        TcpClient client;
-        PaketBuilder packetBuilder;
-
         public event Action<PaketContainer>? ConnectedEvent;
         public event Action<PaketContainer>? MessageReceivedEvent;
         public event Action<PaketContainer>? DisconnectedUserEvent;
+
+        private PaketBuilder packetBuilder;
+        private TcpClient client;
+
+        private string username;
 
         public ServerConnector()
         {
@@ -23,13 +27,13 @@ namespace ChatClient.Net
             packetBuilder = new PaketBuilder();
         }
 
-        public async Task ConnectAsync(string username, string addressWithPort)
+        public async Task ConnectAsync(string username, string addressWithPort, CancellationToken cancelationToken)
         {
             if (!client.Connected)
             {
                 try
                 {
-                      await client.ConnectAsync(AddressHelper.ParseAddress(addressWithPort), AddressHelper.ParsePort(addressWithPort));
+                    await client.ConnectAsync(AddressHelper.ParseAddress(addressWithPort), AddressHelper.ParsePort(addressWithPort));
                 }
                 catch (Exception ex)
                 {
@@ -40,9 +44,19 @@ namespace ChatClient.Net
                 {
                     var connectMessage = this.packetBuilder.BuildMessage(NetworkOperationCode.NewConnection, username);
                     client.Client.Send(connectMessage);
+                    this.username = username;
                 }
 
-                ReadPackets(paketReader);
+                ReadPackets(paketReader, cancelationToken);
+            }
+        }
+        public async Task DisconnectAsync()
+        {
+            if (this.client.Connected)
+            {
+                var disconnectPacket = this.packetBuilder.BuildMessage(NetworkOperationCode.UserDisconnected);
+                this.client.Client.Send(disconnectPacket);
+                this.client.Close();
             }
         }
 
@@ -53,14 +67,27 @@ namespace ChatClient.Net
             this.client.Client.Send(messagePacket);
         }
 
-        private void ReadPackets(PaketReader paketReader)
+        private void ReadPackets(PaketReader paketReader, CancellationToken cancelationToken)
         {
             Task.Factory.StartNew(() =>
             {
                 string log;
-                while (true)
+                PaketContainer message;
+                while (!cancelationToken.IsCancellationRequested)
                 {
-                    var message = paketReader.ReadMessage();
+                    try
+                    {
+                        message = paketReader.ReadMessage();
+                    }
+                    catch (IOException e)
+                    {
+                        if (cancelationToken.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                        throw;
+                    }
+
                     switch (message.OperationCode)
                     {
                         case NetworkOperationCode.None:
@@ -84,7 +111,7 @@ namespace ChatClient.Net
                             break;
                     }
                 }
-            });
+            }, cancelationToken);
         }
     }
 }

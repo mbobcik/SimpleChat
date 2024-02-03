@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -17,29 +18,40 @@ namespace ChatClient.MVVM.ViewModel
     {
         public RelayCommand ConnectToServerCommand { get; set; }
         public RelayCommand SendMessageCommand { get; set; }
-        
+        public RelayCommand DisconnectFromServerCommand { get; set; }
+
         public string UserName { get; set; }
         public string AddressWithPort{ get; set; }
-
         public string Message { get; set; }
 
         public ObservableCollection<UserModel> ConnectedUsers{ get; set; }
         public ObservableCollection<MessageContainer> Messages { get; set; }
 
         private ServerConnector server;
-        
+        private CancellationTokenSource cancellationTokenSource;
+        private CancellationToken cancelationToken;
+
         public MainViewModel() {
+            this.cancellationTokenSource = new CancellationTokenSource();
+            this.cancelationToken = cancellationTokenSource.Token;
             server = new ServerConnector();
 
             server.ConnectedEvent += UserConnected;
             server.DisconnectedUserEvent += DisconnectedUser;
-            server.MessageReceivedEvent += ReceivedMessage; 
+            server.MessageReceivedEvent += ReceivedMessage;
 
-            ConnectToServerCommand = new RelayCommand (x =>  server.ConnectAsync(UserName, AddressWithPort), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
+            ConnectToServerCommand = new RelayCommand(async x => await server.ConnectAsync(UserName, AddressWithPort, this.cancelationToken), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
             SendMessageCommand = new RelayCommand(x => server.SendMessageToServer(Message), x => !string.IsNullOrWhiteSpace(Message));
+            DisconnectFromServerCommand = new RelayCommand(x => Disconnect());
 
             ConnectedUsers = new ObservableCollection<UserModel>();
             Messages = new ObservableCollection<MessageContainer>();
+        }
+
+        private async void Disconnect()
+        {
+            this.cancellationTokenSource.Cancel();
+            await this.server.DisconnectAsync();
         }
 
         private void DisconnectedUser(PaketContainer message)

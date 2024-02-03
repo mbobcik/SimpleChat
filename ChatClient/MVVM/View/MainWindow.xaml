@@ -5,12 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient" xmlns:viewmodel="clr-namespace:ChatClient.MVVM.ViewModel"
         mc:Ignorable="d"
-        Title="Chat Client" Height="474" Width="816">
+        Title="Chat Client" Height="474" Width="816"
+        xmlns:Interactivity="http://schemas.microsoft.com/xaml/behaviors"
+        
+    >
 
     <Window.DataContext>
         <viewmodel:MainViewModel></viewmodel:MainViewModel>
     </Window.DataContext>
-    
+
+    <Interactivity:Interaction.Triggers>
+        <Interactivity:EventTrigger EventName="Closing">
+            <Interactivity:InvokeCommandAction Command="{Binding DisconnectFromServerCommand}">
+            </Interactivity:InvokeCommandAction>
+        </Interactivity:EventTrigger>
+    </Interactivity:Interaction.Triggers>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200">
@@ -18,7 +28,7 @@
             <ColumnDefinition Width="Auto">
             </ColumnDefinition>
         </Grid.ColumnDefinitions>
-        
+
         <DockPanel>
             <Label 
                 Content="Address:Port"
@@ -55,7 +65,7 @@
         <StackPanel Grid.Column="1">
             <ListView 
                 Height="380"
-                ItemsSource="{Binding Messages, UpdateSourceTrigger=PropertyChanged}"
+                ItemsSource="{Binding Messages}"
                 >
                 <ListView.ItemTemplate>
                     <DataTemplate>
