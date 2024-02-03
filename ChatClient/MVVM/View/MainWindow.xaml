@@ -45,6 +45,12 @@
             <TextBox Height="25"
                        DockPanel.Dock="Top"
                        Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}">
+                <Interactivity:Interaction.Triggers>
+                    <Interactivity:KeyTrigger Key="Enter" FiredOn="KeyUp">
+                        <Interactivity:InvokeCommandAction Command="{Binding ConnectToServerCommand}">
+                        </Interactivity:InvokeCommandAction>
+                    </Interactivity:KeyTrigger>
+                </Interactivity:Interaction.Triggers>
             </TextBox>
             <Button Height="25"
                     DockPanel.Dock="Top"
@@ -72,6 +78,7 @@
                         <TextBlock Text="{Binding ShowMessage}">
                             <TextBlock.ToolTip>
                                 <StackPanel>
+                                    <TextBlock Text="{Binding Sender.UserName, StringFormat=Sender username: {0}}"></TextBlock>
                                     <TextBlock Text="{Binding Sender.Id, StringFormat=Sender ID: {0}}"></TextBlock>
                                     <TextBlock Text="{Binding SentAt, StringFormat=Sent at: {0}}"></TextBlock>
                                     <TextBlock Text="{Binding ReceivedAt, StringFormat=Received at: {0}}"></TextBlock>
@@ -85,7 +92,12 @@
                 <TextBox 
                     Height="55"
                     Width="545"
-                    Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}">                    
+                    Text="{Binding Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <Interactivity:Interaction.Triggers>
+                        <Interactivity:KeyTrigger Key="Enter" FiredOn="KeyUp">
+                            <Interactivity:InvokeCommandAction Command="{Binding SendMessageCommand}"/>
+                        </Interactivity:KeyTrigger>
+                    </Interactivity:Interaction.Triggers>
                 </TextBox>
                 <Button 
                     Height="55" 

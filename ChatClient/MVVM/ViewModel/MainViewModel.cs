@@ -23,7 +23,7 @@ namespace ChatClient.MVVM.ViewModel
         public string UserName { get; set; }
         public string AddressWithPort{ get; set; }
         public string Message { get; set; }
-
+        
         public ObservableCollection<UserModel> ConnectedUsers{ get; set; }
         public ObservableCollection<MessageContainer> Messages { get; set; }
 
@@ -41,11 +41,16 @@ namespace ChatClient.MVVM.ViewModel
             server.MessageReceivedEvent += ReceivedMessage;
 
             ConnectToServerCommand = new RelayCommand(async x => await server.ConnectAsync(UserName, AddressWithPort, this.cancelationToken), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
-            SendMessageCommand = new RelayCommand(x => server.SendMessageToServer(Message), x => !string.IsNullOrWhiteSpace(Message));
+            SendMessageCommand = new RelayCommand(x => SendMessage(), x => !string.IsNullOrWhiteSpace(Message));
             DisconnectFromServerCommand = new RelayCommand(x => Disconnect());
 
             ConnectedUsers = new ObservableCollection<UserModel>();
             Messages = new ObservableCollection<MessageContainer>();
+        }
+
+        private void SendMessage()
+        {
+            server.SendMessageToServer(this.Message);
         }
 
         private async void Disconnect()
