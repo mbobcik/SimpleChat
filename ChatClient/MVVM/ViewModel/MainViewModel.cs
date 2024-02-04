@@ -5,8 +5,10 @@ using ChatClient.Net;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,11 +16,13 @@ using System.Windows;
 
 namespace ChatClient.MVVM.ViewModel
 {
-    internal class MainViewModel
+    internal class MainViewModel : INotifyPropertyChanged
     {
         public RelayCommand ConnectToServerCommand { get; set; }
         public RelayCommand SendMessageCommand { get; set; }
         public RelayCommand DisconnectFromServerCommand { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public string UserName { get; set; }
         public string AddressWithPort{ get; set; }
@@ -29,18 +33,16 @@ namespace ChatClient.MVVM.ViewModel
 
         private ServerConnector server;
         private CancellationTokenSource cancellationTokenSource;
-        private CancellationToken cancelationToken;
 
         public MainViewModel() {
             this.cancellationTokenSource = new CancellationTokenSource();
-            this.cancelationToken = cancellationTokenSource.Token;
             server = new ServerConnector();
 
             server.ConnectedEvent += UserConnected;
             server.DisconnectedUserEvent += DisconnectedUser;
             server.MessageReceivedEvent += ReceivedMessage;
 
-            ConnectToServerCommand = new RelayCommand(async x => await server.ConnectAsync(UserName, AddressWithPort, this.cancelationToken), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
+            ConnectToServerCommand = new RelayCommand(async x => await server.ConnectAsync(UserName, AddressWithPort, cancellationTokenSource.Token), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
             SendMessageCommand = new RelayCommand(x => SendMessage(), x => !string.IsNullOrWhiteSpace(Message));
             DisconnectFromServerCommand = new RelayCommand(x => Disconnect());
 
@@ -48,9 +50,21 @@ namespace ChatClient.MVVM.ViewModel
             Messages = new ObservableCollection<MessageContainer>();
         }
 
+        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                throw new ArgumentException($"'{nameof(propertyName)}' cannot be null or whitespace.", nameof(propertyName));
+            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         private void SendMessage()
         {
             server.SendMessageToServer(this.Message);
+            this.Message = string.Empty;
+            // Notify UI that property was changed
+            OnPropertyChanged(nameof(Message));
         }
 
         private async void Disconnect()

@@ -25,7 +25,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200">
             </ColumnDefinition>
-            <ColumnDefinition Width="Auto">
+            <ColumnDefinition Width="*">
             </ColumnDefinition>
         </Grid.ColumnDefinitions>
 
@@ -34,9 +34,11 @@
                 Content="Address:Port"
                 DockPanel.Dock="Top"
                    ></Label>
-            <TextBox Height="25"
-                       DockPanel.Dock="Top"
-                       Text="{Binding AddressWithPort, UpdateSourceTrigger=PropertyChanged}">
+            <TextBox 
+                Name="AddressWithPort"
+                Height="25"
+                DockPanel.Dock="Top"
+                Text="{Binding AddressWithPort, UpdateSourceTrigger=PropertyChanged}">
             </TextBox>
             <Label 
                 Content="Display name:"

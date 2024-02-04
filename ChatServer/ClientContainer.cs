@@ -34,7 +34,7 @@ namespace ChatServer
 
             // End on https://youtu.be/I-Xmp-mulz4?t=1566
 
-            Console.WriteLine($"[{DateTime.Now}]: User {UserName} with ID {Id} has connected");
+            Console.WriteLine($"[{DateTime.Now}]: user {UserName} with ID {Id} has connected");
 
             Task.Factory.StartNew(Process);
         }
