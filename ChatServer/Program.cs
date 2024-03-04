@@ -7,16 +7,17 @@ namespace ChatServer
 {
     internal class Program
     {
-        static TcpListener listener;
-        static List<ClientContainer> connectedClients;
-        static PaketBuilder paketBuilder;
+        static TcpListener? listener;
+        static List<ClientContainer> connectedClients = new List<ClientContainer>();  
+        static PaketBuilder paketBuilder = new PaketBuilder();
+        static ConfigurationProvider<ServerConfiguration> configurationProvider;
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World! Listening at 7981");
-            connectedClients = new List<ClientContainer>();
-            paketBuilder = new PaketBuilder();
-
-            listener = new TcpListener(IPAddress.Any, 7981);
+            configurationProvider = new ConfigurationProvider<ServerConfiguration>("Configuration.json");
+            
+            var port = configurationProvider.Configuration.Port;
+            Console.WriteLine($"Hello, World! Listening at {port}");
+            listener = new TcpListener(IPAddress.Any, port);
             listener.Start();
 
             while (true)
