@@ -8,7 +8,7 @@ namespace ChatClient.MVVM.Model
 {
     internal class UserModel
     {
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
         public Guid Id { get; set; }
         public override string ToString()
         {

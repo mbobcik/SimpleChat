@@ -24,7 +24,7 @@ namespace Chat.Shared
             {
                 return false;
             }
-            if (Uri.CheckHostName(address) == UriHostNameType.Unknown || !IPAddress.TryParse(address, out _))
+            if (Uri.CheckHostName(address) == UriHostNameType.Unknown)
             {
                 return false;
             }
@@ -32,13 +32,21 @@ namespace Chat.Shared
             return true;
         }
 
-        public static string ParseAddress(string addressWithPort)
+        public static string ParseAddress(string? addressWithPort)
         {
-            return addressWithPort[..addressWithPort.IndexOf(':')];
+            if (!string.IsNullOrWhiteSpace(addressWithPort))
+            {
+                return addressWithPort[..addressWithPort.IndexOf(':')];
+            }
+            return String.Empty;
         }
 
-        public static int ParsePort(string addressWithPort)
+        public static int ParsePort(string? addressWithPort)
         {
+            if (string.IsNullOrWhiteSpace(addressWithPort))
+            {
+                return -1;
+            }
             string portString = addressWithPort.Substring(addressWithPort.IndexOf(":") + 1);
             int port;
             if (!int.TryParse(portString, out port) || port > 65535 || port < 1)

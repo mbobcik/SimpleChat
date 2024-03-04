@@ -5,10 +5,10 @@ namespace ChatClient.MVVM.Model
 {
     internal class MessageContainer
     {
-        public UserModel Sender { get; set; }
+        public UserModel? Sender { get; set; }
         public DateTime ReceivedAt { get; set; }
         public DateTime SentAt { get; internal set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         public MessageType Type { get; set; }
 
@@ -22,6 +22,8 @@ namespace ChatClient.MVVM.Model
                         return $"[{SentAt}] {Sender}: {Message}"; 
                     case MessageType.DisconnectedUser:
                         return $"[{SentAt}] User {Sender} Disconnected!";
+                    case MessageType.ErrorMessage:
+                        return $"[{SentAt}] Error Occured:\n{Message}\n";
                     default:
                         return base.ToString();
                 }
@@ -31,7 +33,8 @@ namespace ChatClient.MVVM.Model
         public enum MessageType
         {
             Message = 0,
-            DisconnectedUser
+            DisconnectedUser,
+            ErrorMessage
         }
     }
 }

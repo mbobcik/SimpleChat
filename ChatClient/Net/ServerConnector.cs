@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Printing;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,11 +16,13 @@ namespace ChatClient.Net
         public event Action<PaketContainer>? ConnectedEvent;
         public event Action<PaketContainer>? MessageReceivedEvent;
         public event Action<PaketContainer>? DisconnectedUserEvent;
+        public event Action<string>? LogErrorEvent;
 
         private PaketBuilder packetBuilder;
         private TcpClient client;
 
-        private string username;
+        private string username = String.Empty;
+        private bool connecting = false;
 
         public ServerConnector()
         {
@@ -27,17 +30,22 @@ namespace ChatClient.Net
             packetBuilder = new PaketBuilder();
         }
 
-        public async Task ConnectAsync(string username, string addressWithPort, CancellationToken cancelationToken)
+        public async Task ConnectAsync(string? username, string? addressWithPort, CancellationToken cancelationToken)
         {
-            if (!client.Connected)
+            if (!client.Connected && !this.connecting)
             {
                 try
                 {
+                    this.connecting = true;
                     await client.ConnectAsync(AddressHelper.ParseAddress(addressWithPort), AddressHelper.ParsePort(addressWithPort));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"ERROR: Failed to connect to client with following exception: {ex}");
+                    this.LogError($"ERROR: Failed to connect to client with following exception: {ex}");
+                }
+                finally
+                {
+                    this.connecting = false;
                 }
                 PaketReader paketReader = new PaketReader(client.GetStream());
                 if (!string.IsNullOrEmpty(username))
@@ -55,7 +63,7 @@ namespace ChatClient.Net
             if (this.client.Connected)
             {
                 var disconnectPacket = this.packetBuilder.BuildMessage(NetworkOperationCode.UserDisconnected);
-                this.client.Client.Send(disconnectPacket);
+                await this.client.Client.SendAsync(disconnectPacket);
                 this.client.Close();
             }
         }
@@ -79,7 +87,7 @@ namespace ChatClient.Net
                     {
                         message = paketReader.ReadMessage();
                     }
-                    catch (IOException e)
+                    catch (IOException)
                     {
                         if (cancelationToken.IsCancellationRequested)
                         {
@@ -90,14 +98,8 @@ namespace ChatClient.Net
 
                     switch (message.OperationCode)
                     {
-                        case NetworkOperationCode.None:
-                            break;
-                        case NetworkOperationCode.NewConnection:
-                            log = string.Join("}, {", message.Payload.ToArray());
-                            Console.WriteLine($"WARN: Wrong OpCode in this state. OpCode {message.OperationCode}; Payload {{{log}}}");
-                            break;
                         case NetworkOperationCode.NewClientBroadcast:
-                            ConnectedEvent?.Invoke(message);
+                            this.ConnectedEvent?.Invoke(message);
                             break;
                         case NetworkOperationCode.MessageToServer:
                             this.MessageReceivedEvent?.Invoke(message);
@@ -105,13 +107,20 @@ namespace ChatClient.Net
                         case NetworkOperationCode.UserDisconnected:
                             this.DisconnectedUserEvent?.Invoke(message);
                             break;
+                        case NetworkOperationCode.None:
+                        case NetworkOperationCode.NewConnection:
                         default:
                             log = string.Join("}, {", message.Payload.ToArray());
-                            Console.WriteLine($"This should not happen. OpCode {message.OperationCode}; Payload {{{log}}}");
+                            this.LogError($"This should not happen. OpCode {message.OperationCode}; Payload {{{log}}}");
                             break;
                     }
                 }
             }, cancelationToken);
+        }
+
+        private void LogError(string format, params string[] arguments)
+        {
+            this.LogErrorEvent?.Invoke(string.Format(format, arguments));
         }
     }
 }

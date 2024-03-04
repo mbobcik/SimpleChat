@@ -22,11 +22,11 @@ namespace ChatClient.MVVM.ViewModel
         public RelayCommand SendMessageCommand { get; set; }
         public RelayCommand DisconnectFromServerCommand { get; set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        public string UserName { get; set; }
-        public string AddressWithPort{ get; set; }
-        public string Message { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string AddressWithPort { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
         
         public ObservableCollection<UserModel> ConnectedUsers{ get; set; }
         public ObservableCollection<MessageContainer> Messages { get; set; }
@@ -41,8 +41,10 @@ namespace ChatClient.MVVM.ViewModel
             server.ConnectedEvent += UserConnected;
             server.DisconnectedUserEvent += DisconnectedUser;
             server.MessageReceivedEvent += ReceivedMessage;
+            server.LogErrorEvent += LogErrorEvent;
 
-            ConnectToServerCommand = new RelayCommand(async x => await server.ConnectAsync(UserName, AddressWithPort, cancellationTokenSource.Token), x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
+            ConnectToServerCommand = new RelayCommand(async x => await server.ConnectAsync(UserName, AddressWithPort, cancellationTokenSource.Token), 
+                x => !string.IsNullOrWhiteSpace(UserName) && AddressHelper.ValidateServerAddress(AddressWithPort));
             SendMessageCommand = new RelayCommand(x => SendMessage(), x => !string.IsNullOrWhiteSpace(Message));
             DisconnectFromServerCommand = new RelayCommand(x => Disconnect());
 
@@ -50,7 +52,18 @@ namespace ChatClient.MVVM.ViewModel
             Messages = new ObservableCollection<MessageContainer>();
         }
 
-        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void LogErrorEvent(string message)
+        {
+            var errorMessageContainer = new MessageContainer
+            {
+                Message = message,
+                ReceivedAt = DateTime.Now,
+                Type = MessageContainer.MessageType.ErrorMessage
+            };
+            Application.Current.Dispatcher.Invoke(() => Messages.Add(errorMessageContainer));
+        }
+
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             if (string.IsNullOrWhiteSpace(propertyName))
             {
